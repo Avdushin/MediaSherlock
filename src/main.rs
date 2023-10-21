@@ -2,11 +2,10 @@ use figlet_rs::FIGfont;
 use std::env;
 use std::fs::File;
 use std::io::{self, Write};
-use std::process::abort;
 use std::process::{Command, Stdio};
 
 const APP_NAME: &str = "Media Sherlock";
-const VERSION: &str = "0.1.0";
+const VERSION: &str = "0.1.2";
 const AUTHOR: &str = "https://github.com/Avdushin";
 
 fn main() -> io::Result<()> {
@@ -20,10 +19,10 @@ fn main() -> io::Result<()> {
         return Ok(());
     }
     // Version showcase
-    if args[1] == ("-v") || args[1] == ("--version") {
+    if args[1] == "-v" || args[1] == "--version" {
         logo(APP_NAME);
-        println!("Version: {VERSION}\nAuthor: {AUTHOR}");
-        abort();
+        println!("Version: {}\nAuthor: {}", VERSION, AUTHOR);
+        return Ok(());
     }
 
     // Выполняем команду mediainfo с путем до файла
@@ -50,15 +49,16 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-// Собираем нужную информацию о файле
-// Видео дорожка: Codec ID, Width; Height, Display aspect ratio, Frame rate, Bit rate
-// Ауадио дорожка:  Codec ID, Sampling rate, Channel(s), Bit rate
-fn get_media_info(file_path: &str) -> io::Result<(String, String)> {
+// Собираем информацию о файле
+fn get_media_info(file_path: &str) -> io::Result<(Vec<String>, Vec<String>)> {
     let output = Command::new("mediainfo")
         .arg(file_path)
         .arg("--Output=JSON")
         .stdout(Stdio::piped())
         .output();
+
+    let mut video_info = Vec::new();
+    let mut audio_info = Vec::new();
 
     match output {
         Ok(output) => {
@@ -66,56 +66,61 @@ fn get_media_info(file_path: &str) -> io::Result<(String, String)> {
                 let json_output = String::from_utf8_lossy(&output.stdout);
                 let parsed_data: serde_json::Value = serde_json::from_str(&json_output)?;
 
-                let video_info = &parsed_data["media"]["track"][1];
-                let audio_info = &parsed_data["media"]["track"][2];
+                if let Some(media_tracks) = parsed_data["media"]["track"].as_array() {
+                    for track in media_tracks {
+                        let track_type = track["@type"].as_str().unwrap_or("N/A");
+                        let codec_id = track["CodecID"].as_str().unwrap_or("N/A");
+                        let bit_rate = track["BitRate"].as_str().unwrap_or("N/A");
+                        let formatted_bit_rate = format_bitrate(bit_rate);
 
-                let video_codec_id = video_info["CodecID"].as_str().unwrap_or("N/A");
-                let video_width = video_info["Width"].as_str().unwrap_or("N/A");
-                let video_height = video_info["Height"].as_str().unwrap_or("N/A");
-                let display_aspect_ratio =
-                    video_info["DisplayAspectRatio"].as_str().unwrap_or("N/A");
-                let frame_rate = video_info["FrameRate"].as_str().unwrap_or("N/A");
-                let video_bit_rate = video_info["BitRate"].as_str().unwrap_or("N/A");
+                        if track_type == "Video" {
+                            let width = track["Width"].as_str().unwrap_or("N/A");
+                            let height = track["Height"].as_str().unwrap_or("N/A");
+                            let display_aspect_ratio = track["DisplayAspectRatio"].as_str().unwrap_or("N/A");
+                            let frame_rate = track["FrameRate"].as_str().unwrap_or("N/A");
 
-                // Преобразуем DisplayAspectRatio
-                let display_aspect_ratio_formatted =
-                    convert_display_aspect_ratio(display_aspect_ratio);
+                            let video_info_formatted = format!(
+                                "{}, {}x{}p, {}, {} FPS, {}",
+                                codec_id, width, height, display_aspect_ratio, frame_rate, formatted_bit_rate
+                            );
 
-                let audio_codec_id = audio_info["CodecID"].as_str().unwrap_or("N/A");
-                let sampling_rate = audio_info["SamplingRate"].as_str().unwrap_or("N/A");
-                let channels = audio_info["Channels"].as_str().unwrap_or("N/A");
-                let audio_bit_rate = audio_info["BitRate"].as_str().unwrap_or("N/A");
+                            video_info.push(video_info_formatted);
+                        } else if track_type == "Audio" {
+                            let sampling_rate = track["SamplingRate"].as_str().unwrap_or("N/A");
+                            let channels = track["Channels"].as_str().unwrap_or("N/A");
 
-                let video_info_formatted = format!(
-                    "{}, {}x{}p, {}, {} FPS, {} kb/s",
-                    video_codec_id,
-                    video_width,
-                    video_height,
-                    display_aspect_ratio_formatted,
-                    frame_rate,
-                    video_bit_rate
-                );
-                let audio_info_formatted = format!(
-                    "{}, {} kHz, {}, {} kb/s",
-                    audio_codec_id, sampling_rate, channels, audio_bit_rate
-                );
+                            let audio_info_formatted = format!(
+                                "{}, {} kHz, {} ch, {}",
+                                codec_id, sampling_rate, channels, formatted_bit_rate
+                            );
 
-                Ok((video_info_formatted, audio_info_formatted))
-            } else {
-                Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "Ошибка выполнения команды mediainfo",
-                ))
+                            audio_info.push(audio_info_formatted);
+                        }
+                    }
+                }
             }
         }
-        Err(_) => Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Ошибка выполнения команды mediainfo",
-        )),
+        Err(_) => {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Ошибка выполнения команды mediainfo",
+            ));
+        }
     }
+
+    if video_info.is_empty() {
+        video_info.push("No video track found".to_string());
+    }
+
+    if audio_info.is_empty() {
+        audio_info.push("No audio track found".to_string());
+    }
+
+    Ok((video_info, audio_info))
 }
 
-// конвертируем параметр Aspect Ratio в привычный формат (16:9 или 4:3 и тп)
+
+// конвертируем параметр Aspect Ratio в привычный формат
 fn convert_display_aspect_ratio(raw_ratio: &str) -> String {
     match raw_ratio {
         "1.778" => "16:9".to_string(),
@@ -139,19 +144,33 @@ fn convert_display_aspect_ratio(raw_ratio: &str) -> String {
     }
 }
 
-// Create TMP file...
-fn create_temp_file(video_info: &str, audio_info: &str) -> io::Result<String> {
+// Функция для форматирования битрейта в тысячах
+fn format_bitrate(bitrate: &str) -> String {
+    if let Ok(bitrate_val) = bitrate.parse::<f64>() {
+        let formatted_bitrate = (bitrate_val / 1000.0).round();
+        return format!("{:.0} kb/s", formatted_bitrate);
+    }
+    bitrate.to_string()
+}
+
+// Создаем TMP файл
+fn create_temp_file(video_info: &Vec<String>, audio_info: &Vec<String>) -> io::Result<String> {
     let temp_dir = env::temp_dir();
     let temp_file_path = temp_dir.join("mediainfo.txt");
 
     let mut file = File::create(&temp_file_path)?;
 
-    write!(file, "{}\n{}\n", video_info, audio_info)?;
+    for info in video_info.iter() {
+        write!(file, "{}\n", info)?;
+    }
+    for info in audio_info.iter() {
+        write!(file, "{}\n", info)?;
+    }
 
     Ok(temp_file_path.to_string_lossy().to_string())
 }
 
-// Open info at the notepad...
+// Открываем файл в блокноте
 fn open_file_in_notepad(file_path: &str) {
     Command::new("notepad.exe")
         .arg(file_path)
