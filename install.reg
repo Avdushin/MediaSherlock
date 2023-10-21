@@ -1,0 +1,7 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shell\Media Sherlock]
+@="Open with Media Sherlock"
+
+[HKEY_CLASSES_ROOT\*\shell\Media Sherlock\command]
+@="\"C:\Program Files\MediaSherlock\media_sherlock.exe\" \"%1\""
