@@ -65,3 +65,24 @@ figlet-rs = "0.1.5"
 ---
 - [ ] Auto-install Script
 - [ ] File's arch
+- [ ] Собрать приложения (иконка в контекстном меню)
+- [ ] Формат
+  - Удалить лишнее "V_" и "A_"
+
+   ``` 
+   V_MPEG4/ISO/AVC, 1920x1080p, 1.778, 23.976 FPS, 5938 kb/s
+   A_AC3, 48000 kHz, 2 ch, 384 kb/s
+   A_AC3, 48000 kHz, 6 ch, 448 kb/s
+   A_AC3, 48000 kHz, 6 ch, 448 kb/s
+   A_AC3, 48000 kHz, 6 ch, 384 kb/s
+   A_EAC3, 48000 kHz, 6 ch, 256 kb/s
+   
+   V_MPEGH/ISO/HEVC, 3840x2160p, 1.778, 23.976 FPS, 14170 kb/s
+   A_AC3, 48000 kHz, 2 ch, 384 kb/s
+   A_AC3, 48000 kHz, 6 ch, 448 kb/s
+   A_EAC3, 48000 kHz, 6 ch, 640 kb/s
+   
+   V_MPEG4/ISO/AVC, 1920x1080p, 1.778, 25.000 FPS, 11922 kb/s
+   A_AC3, 48000 kHz, 2 ch, 640 kb/s
+   A_AC3, 48000 kHz, 2 ch, 640 kb/s
+   ```

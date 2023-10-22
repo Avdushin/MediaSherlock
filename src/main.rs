@@ -9,6 +9,7 @@ const VERSION: &str = "0.1.2";
 const AUTHOR: &str = "https://github.com/Avdushin";
 
 fn main() -> io::Result<()> {
+
     // Получаем аргумент командной строки
     let args: Vec<String> = env::args().collect();
 
@@ -76,12 +77,18 @@ fn get_media_info(file_path: &str) -> io::Result<(Vec<String>, Vec<String>)> {
                         if track_type == "Video" {
                             let width = track["Width"].as_str().unwrap_or("N/A");
                             let height = track["Height"].as_str().unwrap_or("N/A");
-                            let display_aspect_ratio = track["DisplayAspectRatio"].as_str().unwrap_or("N/A");
+                            let display_aspect_ratio =
+                                track["DisplayAspectRatio"].as_str().unwrap_or("N/A");
                             let frame_rate = track["FrameRate"].as_str().unwrap_or("N/A");
 
                             let video_info_formatted = format!(
                                 "{}, {}x{}p, {}, {} FPS, {}",
-                                codec_id, width, height, display_aspect_ratio, frame_rate, formatted_bit_rate
+                                codec_id,
+                                width,
+                                height,
+                                display_aspect_ratio,
+                                frame_rate,
+                                formatted_bit_rate
                             );
 
                             video_info.push(video_info_formatted);
@@ -118,7 +125,6 @@ fn get_media_info(file_path: &str) -> io::Result<(Vec<String>, Vec<String>)> {
 
     Ok((video_info, audio_info))
 }
-
 
 // конвертируем параметр Aspect Ratio в привычный формат
 fn convert_display_aspect_ratio(raw_ratio: &str) -> String {
