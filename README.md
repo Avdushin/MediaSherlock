@@ -59,9 +59,12 @@ mp4a-40-2, 48000 kHz, 2, 192000 kb/s
 serde = "1.0"
 serde_json = "1.0"
 figlet-rs = "0.1.5"
+regex = { version = "1.10.2", features = [] }
 ```
 
 ### TODO
 ---
 - [ ] Auto-install Script
-- [ ] File's arch
+- [ ] Собрать приложения (иконка в контекстном меню)
+- [x] File's arch
+- [x] Формат
