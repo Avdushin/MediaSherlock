@@ -5,6 +5,7 @@ use std::io::{self, Write};
 use std::process::{Command, Stdio};
 
 // Создаем TMP файл
+/// Создаем временный файл, в который будем выводить нужную информацию
 pub fn create_temp_file(video_info: &Vec<String>, audio_info: &Vec<String>) -> io::Result<String> {
     let temp_dir = env::temp_dir();
     let temp_file_path = temp_dir.join("mediainfo.txt");
