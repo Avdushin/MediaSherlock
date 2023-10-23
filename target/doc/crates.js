@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["aho_corasick","figlet_rs","itoa","media_sherlock","memchr","regex","regex_automata","regex_syntax","ryu","serde","serde_json"];

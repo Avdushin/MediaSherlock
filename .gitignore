@@ -1,6 +1,6 @@
-/target/
+/target/*
+!target/doc/
+
 /.idea
 *.mp4
 *.mkv
-
-!/target/doc

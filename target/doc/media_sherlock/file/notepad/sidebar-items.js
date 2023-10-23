@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create_temp_file","open_file_in_notepad"]};
