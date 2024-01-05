@@ -11,11 +11,16 @@ pub fn logo(name: &str) {
 
 // Функция для форматирования битрейта в тысячах
 pub fn format_bitrate(bitrate: &str) -> String {
-    if let Ok(bitrate_val) = bitrate.parse::<f64>() {
-        let formatted_bitrate = (bitrate_val / 1000.0).round();
-        return format!("{} kb/s", formatted_bitrate);
+    match bitrate {
+        "N/A" => "Variable".to_string(),
+        _ => {
+            if let Ok(bitrate_val) = bitrate.parse::<f64>() {
+                let formatted_bitrate = (bitrate_val / 1000.0).round();
+                return format!("{} kb/s", formatted_bitrate);
+            }
+            bitrate.to_string()
+        }
     }
-    bitrate.to_string()
 }
 
 // Removing of "V_" и "A_" prefixes
